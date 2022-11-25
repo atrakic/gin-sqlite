@@ -66,16 +66,7 @@ func deletePerson(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "deletePerson " + id + " Called"})
 }
 
-func main() {
-	db, err := gorm.Open("sqlite3", "./person.db")
-	if err != nil {
-		 fmt.Println(err)
- 	}
-        defer db.Close()
-        db.AutoMigrate(&Person{})
-        p1 := Person{Id: 1, FirstName: "Foo", LastName: "Bar", Email: "foo@bar.com"}
-	db.Create(&p1)
-	
+func setupRouter() *gin.Engine {
 	//gin.DisableConsoleColor()
 	r := gin.Default()
 	r.GET("/ping", func(c *gin.Context) {
@@ -90,5 +81,19 @@ func main() {
 		v1.PUT("person/:id", updatePerson)
 		v1.DELETE("person/:id", deletePerson)
 	}
+	return r
+}
+
+func main() {
+	db, err := gorm.Open("sqlite3", "./person.db")
+	if err != nil {
+		 fmt.Println(err)
+ 	}
+        defer db.Close()
+        db.AutoMigrate(&Person{})
+        p1 := Person{Id: 1, FirstName: "Foo", LastName: "Bar", Email: "foo@bar.com"}
+	db.Create(&p1)
+	
+	r := setupRouter()
 	r.Run()
 }
