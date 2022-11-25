@@ -1,24 +1,32 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/gorm"
+       _ "github.com/jinzhu/gorm/dialects/sqlite"
+)
+
+var (
+	err error
 )
 
 type Person struct {
-	Id          int    `json:"id"`
+	Id          uint   `json:"id"`
 	FirstName   string `json:"first_name"`
 	LastName    string `json:"last_name"`
-	Email       string   `json:"email"`
-}
-
-// test data
-var persons = []Person{
-	{Id: 1, FirstName: "Foo", LastName: "Bar", Email: "foo@bar.com"},
+	Email       string `json:"email"`
 }
 
 func getPersons(c *gin.Context) {
-	c.IndentedJSON(http.StatusOK, persons)
+	var people []Person
+ 	if err := db.Find(&people).Error; err != nil {
+		c.AbortWithStatus(404)
+		fmt.Println(err)
+	} else {
+		c.IndentedJSON(http.StatusOK, people)
+	}
 }
 
 func getPersonById(c *gin.Context) {
@@ -40,6 +48,15 @@ func deletePerson(c *gin.Context) {
 }
 
 func main() {
+	db, err := gorm.Open("sqlite3", "./person.db")
+	if err != nil {
+		 fmt.Println(err)
+ 	}
+        defer db.Close()
+        db.AutoMigrate(&Person{})
+        p1 := Person{Id: 1, FirstName: "Foo", LastName: "Bar", Email: "foo@bar.com"}
+	db.Create(&p1)
+	
 	r := gin.Default()	
 	v1 := r.Group("/api/v1")
 	{
