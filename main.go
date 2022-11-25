@@ -50,7 +50,15 @@ func addPerson(c *gin.Context) {
 }
 
 func updatePerson(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"message": "updatePerson Called"})
+	var person Person
+	id := c.Params.ByName("id")
+	if err := db.Where("id = ?", id).First(&person).Error; err != nil {
+		c.AbortWithStatus(404)
+		fmt.Println(err)
+	}
+	c.BindJSON(&person)
+	db.Save(&person)
+	c.JSON(http.StatusOK, person)// c.JSON(http.StatusOK, gin.H{"message": "updatePerson Called"})	
 }
 
 func deletePerson(c *gin.Context) {
