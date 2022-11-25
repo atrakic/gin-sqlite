@@ -150,8 +150,9 @@ func connectDatabase() error {
 
 func main() {
 	//p1 := Person{Id: 1, FirstName: "Foo", LastName: "Bar", Email: "foo@bar.com"}
-	connectDatabase()
-
-	r := setupRouter()
-	r.Run()
+	err := connectDatabase()
+	if err != nil {
+		r := setupRouter()
+		r.Run()
+	}
 }
