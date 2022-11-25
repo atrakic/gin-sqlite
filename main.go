@@ -14,7 +14,7 @@ type Person struct {
 
 // test data
 var persons = []Person{
-	{ID: 1, FirstName: "Foo", LastName: "Bar", Email: "foo@bar.com"},
+	{Id: 1, FirstName: "Foo", LastName: "Bar", Email: "foo@bar.com"},
 }
 
 func getPersons(c *gin.Context) {
