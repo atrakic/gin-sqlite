@@ -1,16 +1,18 @@
 package main
 
 import (
-	"fmt"
+	"database/sql"
+	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/sqlite"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 var (
-	db *gorm.DB
+	count int = 10
+	DB    *sql.DB
 )
 
 type Person struct {
@@ -20,63 +22,109 @@ type Person struct {
 	Email     string `json:"email"`
 }
 
+// utils
+func checkErr(err error) {
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func GetPersonById(id string) (Person, error) {
+	stmt, err := DB.Prepare("SELECT id, first_name, last_name, email from people WHERE id = ?")
+
+	if err != nil {
+		return Person{}, err
+	}
+
+	person := Person{}
+	sqlErr := stmt.QueryRow(id).Scan(&person.Id, &person.FirstName, &person.LastName, &person.Email)
+	if sqlErr != nil {
+		if sqlErr == sql.ErrNoRows {
+			return Person{}, nil
+		}
+		return Person{}, sqlErr
+	}
+	return person, nil
+}
+
+func utilsGetPersons(count int) ([]Person, error) {
+
+	rows, err := DB.Query("SELECT id, first_name, last_name, email from people LIMIT " + strconv.Itoa(count))
+
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	people := make([]Person, 0)
+
+	for rows.Next() {
+		singlePerson := Person{}
+		err = rows.Scan(&singlePerson.Id, &singlePerson.FirstName, &singlePerson.LastName, &singlePerson.Email)
+
+		if err != nil {
+			return nil, err
+		}
+
+		people = append(people, singlePerson)
+	}
+
+	err = rows.Err()
+
+	if err != nil {
+		return nil, err
+	}
+
+	return people, err
+}
+
 func getPersons(c *gin.Context) {
-	var people []Person
-	if err := db.Find(&people).Error; err != nil {
-		c.AbortWithStatus(404)
-		fmt.Println(err)
+	persons, err := utilsGetPersons(count)
+	checkErr(err)
+
+	if persons == nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "No Records Found"})
+		return
 	} else {
-		c.IndentedJSON(http.StatusOK, people)
+		c.JSON(http.StatusOK, gin.H{"data": persons})
 	}
 }
 
 func getPersonById(c *gin.Context) {
-	id := c.Params.ByName("id") //id := c.Param("id")
+	id := c.Param("id")
 
-	var person Person
-	if err := db.Where("id = ?", id).First(&person).Error; err != nil {
-		c.AbortWithStatus(404)
-		fmt.Println(err)
+	person, err := GetPersonById(id)
+	checkErr(err)
+	// if the name is blank we can assume nothing is found
+	if person.FirstName == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "No Records Found"})
+		return
 	} else {
-		c.JSON(http.StatusOK, person) 
-		//c.JSON(http.StatusOK, gin.H{"message": "getPersonById " + id +" Called"})
+		c.JSON(http.StatusOK, gin.H{"data": person})
 	}
 }
 
+// TODO:
 func addPerson(c *gin.Context) {
-	var person Person
-	c.BindJSON(&person)
-	db.Create(&person)
-	c.JSON(http.StatusOK, person) 
-	//c.JSON(http.StatusOK, gin.H{"message": "addPerson Called"})
+	c.JSON(http.StatusOK, gin.H{"message": "addPerson Called"})
 }
 
 func updatePerson(c *gin.Context) {
-	var person Person
-	id := c.Params.ByName("id") //id := c.Param("id")
-	if err := db.Where("id = ?", id).First(&person).Error; err != nil {
-		c.AbortWithStatus(404)
-		fmt.Println(err)
-	}
-	c.BindJSON(&person)
-	db.Save(&person)
-	c.JSON(http.StatusOK, person)
-	// c.JSON(http.StatusOK, gin.H{"message": "updatePerson Called"})
+	c.JSON(http.StatusOK, gin.H{"message": "updatePerson Called"})
 }
 
 func deletePerson(c *gin.Context) {
 	id := c.Params.ByName("id")
-	var person Person
-	d := db.Where("id = ?", id).Delete(&person)
-	fmt.Println(d)
-	c.JSON(http.StatusOK, gin.H{"id #i" + id: "deleted"}) 
+	c.JSON(http.StatusOK, gin.H{"id #i" + id: "deleted"})
 }
 
 func setupRouter() *gin.Engine {
 	//gin.DisableConsoleColor()
 	r := gin.Default()
+
 	r.GET("/ping", func(c *gin.Context) {
-		c.String(http.StatusOK, "pong")
+		c.JSON(http.StatusOK, gin.H{"message": "pong"})
 	})
 
 	v1 := r.Group("/api/v1")
@@ -90,16 +138,19 @@ func setupRouter() *gin.Engine {
 	return r
 }
 
-func main() {
-	db, err := gorm.Open("sqlite3", "./person.db")
+func connectDatabase() error {
+	db, err := sql.Open("sqlite3", "./person.db")
 	if err != nil {
-		fmt.Println(err)
+		return err
 	}
-	defer db.Close()
-	db.AutoMigrate(&Person{})
 
+	DB = db
+	return nil
+}
+
+func main() {
 	//p1 := Person{Id: 1, FirstName: "Foo", LastName: "Bar", Email: "foo@bar.com"}
-	//db.Create(&p1)
+	connectDatabase()
 
 	r := setupRouter()
 	r.Run()
