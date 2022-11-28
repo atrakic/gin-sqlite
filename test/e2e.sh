@@ -1,23 +1,23 @@
-#! /usr/bin/env sh
+#!/usr/bin/env bash
 
-set -e
+set -x
 
-SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P)
+set -o errexit
+set -o nounset
+set -o pipefail
 
-# run the build
-$SCRIPT_DIR/run.sh
+#SCRIPT_ROOT=$(dirname "${BASH_SOURCE[0]}")
+#$SCRIPT_ROOT/run.sh
 
-curl --header "Content-Type: application/json" \
-  -H "X-HTTP-Method-Override: PUT" \
+URL="localhost:8080/api/v1/person"
+echo "$URL"
+
+curl --fail --header "Content-Type: application/json" \
   --request POST \
-  --data '{"first_name":"xyz","last_name":"xyz","email":"aaaa@bar.com"}' \
+  --include \
+  --data '{"first_name":"xyz","last_name":"xyz","email":"xyz@bar.com"}' \
   localhost:8080/api/v1/person
 
-curl -X PUT --url localhost:8080/api/v1/person/2 --data 'email=bbbb\@bar.com'
-
-#sqlite3 person.db "select * from people where id = 2"
-
-
-curl -X "DELETE" localhost:8080/api/v1/person/2
-
+curl -i -X PUT -H "Content-Type: application/json" --data '{ "first_name": "Test", "last_name":"Test", "email":"xyz@bar.com"}' localhost:8080/api/v1/person/1
+curl -i -X "DELETE" localhost:8080/api/v1/person/2
 sqlite3 person.db "select * from people"

@@ -58,24 +58,21 @@ func addPerson(c *gin.Context) {
 }
 
 func updatePerson(c *gin.Context) {
-	var json Person
 
+	personID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
+	}
+
+	var json Person
 	if err := c.ShouldBindJSON(&json); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	personID, err := strconv.Atoi(c.Param("id"))
-
-	fmt.Printf("Updating id %d", personID)
-
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
-	}
-
 	success, err := DbUpdatePerson(json, personID)
-
 	if success {
+		fmt.Printf("Updating id %d", personID)
 		c.JSON(http.StatusOK, gin.H{"message": "Success"})
 	}
 
@@ -83,7 +80,7 @@ func updatePerson(c *gin.Context) {
 }
 
 func deletePerson(c *gin.Context) {
-	personID, err := strconv.Atoi(c.Params.ByName("id")) // (c.Params.ByName("id"))
+	personID, err := strconv.Atoi(c.Params.ByName("id"))
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
@@ -92,7 +89,7 @@ func deletePerson(c *gin.Context) {
 	success, err := DbDeletePerson(personID)
 
 	if success {
-		c.JSON(http.StatusOK, gin.H{"message": "id #i" + strconv.Itoa(personID) + "deleted"})
+		c.JSON(http.StatusOK, gin.H{"message": "id #" + strconv.Itoa(personID) + " deleted"})
 	} else {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err})
 	}

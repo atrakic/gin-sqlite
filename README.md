@@ -1,3 +1,7 @@
-# go-project-template
+# gin-sqlite-demo
 
-> My Golang project template repo.
+> A RESTful API with Go and Gin. 
+
+## Uses:
+- https://github.com/mattn/go-sqlite3
+- https://github.com/mattn/go-sqlite3
