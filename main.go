@@ -107,6 +107,20 @@ func setupRouter() *gin.Engine {
 	return r
 }
 
+func basicAuth(c *gin.Context) {
+	// Get the Basic Authentication credentials
+	user, password, hasAuth := c.Request.BasicAuth()
+	if hasAuth && user == "admin" && password == "secret" {
+		log.WithFields(log.Fields{
+			"user": user,
+		}).Info("User authenticated")
+	} else {
+		c.Abort()
+		c.Writer.Header().Set("WWW-Authenticate", "Basic realm=Restricted")
+		return
+	}
+}
+
 func main() {
 	//p1 := Person{Id: 1, FirstName: "Foo", LastName: "Bar", Email: "foo@bar.com"}
 	if err := ConnectDatabase(); err != nil {
@@ -121,7 +135,10 @@ func main() {
 		v1.GET("person/:id", getPersonByID)
 		v1.POST("person", addPerson)
 		v1.PUT("person/:id", updatePerson)
-		v1.DELETE("person/:id", deletePerson)
+
+		// Enable auth from here:
+		// curl -i -X "DELETE" http://admin:secret@localhost:8080/api/v1/person/2
+		v1.DELETE("person/:id", basicAuth, deletePerson)
 	}
 
 	/*
