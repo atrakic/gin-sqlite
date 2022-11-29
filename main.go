@@ -47,14 +47,12 @@ func addPerson(c *gin.Context) {
 		return
 	}
 
-	success, err := DbAddPerson(json)
-
-	if success {
-		c.JSON(http.StatusOK, gin.H{"message": "Success"})
-	} else {
+	_, err := DbAddPerson(json)
+	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err})
 	}
 
+	c.JSON(http.StatusOK, gin.H{"message": "Success"})
 }
 
 func updatePerson(c *gin.Context) {
@@ -70,14 +68,15 @@ func updatePerson(c *gin.Context) {
 		return
 	}
 
-	success, err := DbUpdatePerson(json, personID)
-	if success {
-		fmt.Printf("Updating id %d", personID)
-		c.JSON(http.StatusOK, gin.H{"message": "Success"})
+	_, err := DbUpdatePerson(json, personID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err})
 	}
 
-	c.JSON(http.StatusBadRequest, gin.H{"error": err})
+	fmt.Printf("Updating id %d", personID)
+	c.JSON(http.StatusOK, gin.H{"message": "Success"})
 }
+	
 
 func deletePerson(c *gin.Context) {
 	personID, err := strconv.Atoi(c.Params.ByName("id"))
@@ -89,12 +88,12 @@ func deletePerson(c *gin.Context) {
 	//user := c.MustGet(gin.AuthUserKey).(string)
 	//if secret, ok := secrets[user]; ok {
 	
-	success, err := DbDeletePerson(personID)
-	if success {
-		c.JSON(http.StatusOK, gin.H{"message": "id #" + strconv.Itoa(personID) + " deleted"})
-	} else {
+	_, err := DbDeletePerson(personID)
+	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
 	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "id #" + strconv.Itoa(personID) + " deleted"})
 }
 
 func setupRouter() *gin.Engine {
@@ -108,7 +107,6 @@ func setupRouter() *gin.Engine {
 }
 
 func basicAuth(c *gin.Context) {
-	// Get the Basic Authentication credentials
 	user, password, hasAuth := c.Request.BasicAuth()
 	if hasAuth && user == "admin" && password == "secret" {
 		log.WithFields(log.Fields{
@@ -146,6 +144,5 @@ func main() {
 		"admin": "secret",
 	}))
 	*/
-
 	_ = r.Run()
 }
