@@ -81,17 +81,19 @@ func updatePerson(c *gin.Context) {
 
 func deletePerson(c *gin.Context) {
 	personID, err := strconv.Atoi(c.Params.ByName("id"))
-
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
 	}
 
+	// Must auth
+	//user := c.MustGet(gin.AuthUserKey).(string)
+	//if secret, ok := secrets[user]; ok {
+	
 	success, err := DbDeletePerson(personID)
-
 	if success {
 		c.JSON(http.StatusOK, gin.H{"message": "id #" + strconv.Itoa(personID) + " deleted"})
 	} else {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
 	}
 }
 
@@ -121,5 +123,12 @@ func main() {
 		v1.PUT("person/:id", updatePerson)
 		v1.DELETE("person/:id", deletePerson)
 	}
-	r.Run()
+
+	/*
+	v1.Use(gin.BasicAuth(gin.Accounts {
+		"admin": "secret",
+	}))
+	*/
+
+	_ = r.Run()
 }
