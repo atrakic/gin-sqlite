@@ -68,8 +68,7 @@ func updatePerson(c *gin.Context) {
 		return
 	}
 
-	_, err := DbUpdatePerson(json, personID)
-	if err != nil {
+	if _, err := DbUpdatePerson(json, personID); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err})
 	}
 
@@ -88,8 +87,7 @@ func deletePerson(c *gin.Context) {
 	//user := c.MustGet(gin.AuthUserKey).(string)
 	//if secret, ok := secrets[user]; ok {
 	
-	_, err := DbDeletePerson(personID)
-	if err != nil {
+	if _, err := DbDeletePerson(personID); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
 	}
 
@@ -109,9 +107,7 @@ func setupRouter() *gin.Engine {
 func basicAuth(c *gin.Context) {
 	user, password, hasAuth := c.Request.BasicAuth()
 	if hasAuth && user == "admin" && password == "secret" {
-		log.WithFields(log.Fields{
-			"user": user,
-		}).Info("User authenticated")
+		log.Println("User authenticated")
 	} else {
 		c.Abort()
 		c.Writer.Header().Set("WWW-Authenticate", "Basic realm=Restricted")
