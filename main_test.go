@@ -16,5 +16,5 @@ func TestPingRoute(t *testing.T) {
 	router.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Containsf(t, "{\"message\":\"pong\"}", w.Body.String(), "error message %s", "formatted")
+	assert.Containsf(t, w.Body.String(), "pong", "error message %s", "formatted")
 }
