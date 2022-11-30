@@ -19,15 +19,10 @@ func main() {
 		v1.POST("person", addPerson)
 		v1.PUT("person/:id", updatePerson)
 
-		// Enable auth from here:
+		// Basic Auth from here:
 		// curl -i -X "DELETE" http://admin:secret@localhost:8080/api/v1/person/2
 		v1.DELETE("person/:id", basicAuth, deletePerson)
 	}
 
-	/*
-		v1.Use(gin.BasicAuth(gin.Accounts {
-			"admin": "secret",
-		}))
-	*/
 	_ = r.Run()
 }

@@ -83,10 +83,6 @@ func deletePerson(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
 	}
 
-	// Must auth
-	//user := c.MustGet(gin.AuthUserKey).(string)
-	//if secret, ok := secrets[user]; ok {
-
 	if _, err := DbDeletePerson(personID); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
 	}
@@ -109,8 +105,9 @@ func basicAuth(c *gin.Context) {
 	if hasAuth && user == "admin" && password == "secret" {
 		log.Println("User authenticated")
 	} else {
-		c.Abort()
+    c.Abort()
 		c.Writer.Header().Set("WWW-Authenticate", "Basic realm=Restricted")
+    c.JSON(http.StatusUnauthorized, gin.H{"error": "Authentication failed"})
 		return
 	}
 }
