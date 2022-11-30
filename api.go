@@ -105,9 +105,9 @@ func basicAuth(c *gin.Context) {
 	if hasAuth && user == "admin" && password == "secret" {
 		log.Println("User authenticated")
 	} else {
-    c.Abort()
+		c.Abort()
 		c.Writer.Header().Set("WWW-Authenticate", "Basic realm=Restricted")
-    c.JSON(http.StatusUnauthorized, gin.H{"error": "Authentication failed"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Authentication failed"})
 		return
 	}
 }
