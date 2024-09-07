@@ -1,4 +1,4 @@
-name: golangci
+name: ci
 on:
   workflow_dispatch:
   pull_request:
@@ -17,7 +17,7 @@ jobs:
     defaults:
       run:
         shell: bash
-        #working-directory: src
+
     steps:
       - name: Set up Go ${{ matrix.go-version }}
         uses: actions/setup-go@v5
@@ -27,6 +27,13 @@ jobs:
         id: go
 
       - uses: actions/checkout@v4
+
+      - name: Lint
+        uses: golangci/golangci-lint-action@v4
+        with:
+          version: latest
+          args: --timeout 5m
+
       - name: Build
         run: |
           go get -d -v
