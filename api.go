@@ -2,10 +2,8 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -40,7 +38,6 @@ func getPersonByID(c *gin.Context) {
 }
 
 func addPerson(c *gin.Context) {
-
 	var json Person
 
 	if err := c.ShouldBindJSON(&json); err != nil {
@@ -57,7 +54,6 @@ func addPerson(c *gin.Context) {
 }
 
 func updatePerson(c *gin.Context) {
-
 	personID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
@@ -88,26 +84,4 @@ func deletePerson(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "id #" + strconv.Itoa(personID) + " deleted"})
-}
-
-func setupRouter() *gin.Engine {
-	r := gin.Default()
-
-	r.GET("/ping", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"message": "pong " + fmt.Sprint(time.Now().Unix())})
-	})
-
-	return r
-}
-
-func basicAuth(c *gin.Context) {
-	user, password, hasAuth := c.Request.BasicAuth()
-	if hasAuth && user == "admin" && password == "secret" {
-		log.Println("User authenticated")
-	} else {
-		c.Abort()
-		c.Writer.Header().Set("WWW-Authenticate", "Basic realm=Restricted")
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Authentication failed"})
-		return
-	}
 }
