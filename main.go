@@ -2,16 +2,16 @@ package main
 
 import (
 	"fmt"
-	"time"
+	"github.com/atrakic/gin-sqlite/api"
+	"github.com/atrakic/gin-sqlite/database"
+	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
-
-	"github.com/gin-gonic/gin"
+	"time"
 )
 
 func main() {
-	//p1 := Person{Id: 1, FirstName: "Foo", LastName: "Bar", Email: "foo@bar.com"}
-	if err := ConnectDatabase(); err != nil {
+	if err := database.ConnectDatabase(); err != nil {
 		log.Fatal(err)
 	}
 
@@ -20,14 +20,13 @@ func main() {
 
 	v1 := r.Group("/api/v1")
 	{
-		v1.GET("person", getPersons)
-		v1.GET("person/:id", getPersonByID)
-		v1.POST("person", addPerson)
-		v1.PUT("person/:id", updatePerson)
+		v1.GET("person", api.GetPersons)
+		v1.GET("person/:id", api.GetPersonByID)
 
-		// Basic Auth from here:
-		// curl -i -X "DELETE" http://admin:secret@localhost:8080/api/v1/person/2
-		v1.DELETE("person/:id", basicAuth, deletePerson)
+		// Needs authentication
+		v1.POST("person", basicAuth, api.AddPerson)
+		v1.PUT("person/:id", basicAuth, api.UpdatePerson)
+		v1.DELETE("person/:id", basicAuth, api.DeletePerson)
 	}
 
 	_ = r.Run()

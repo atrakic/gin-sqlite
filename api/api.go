@@ -1,10 +1,12 @@
-package main
+package api
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 
+	"github.com/atrakic/gin-sqlite/database"
 	"github.com/gin-gonic/gin"
 )
 
@@ -12,8 +14,8 @@ var (
 	count int = 10
 )
 
-func getPersons(c *gin.Context) {
-	persons, err := DbGetPersons(count)
+func GetPersons(c *gin.Context) {
+	persons, err := database.DbGetPersons(count)
 	checkErr(err)
 
 	if persons == nil {
@@ -24,10 +26,10 @@ func getPersons(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": persons})
 }
 
-func getPersonByID(c *gin.Context) {
+func GetPersonByID(c *gin.Context) {
 	id := c.Param("id")
 
-	person, err := DbGetPersonByID(id)
+	person, err := database.DbGetPersonByID(id)
 	checkErr(err)
 
 	if person.FirstName == "" {
@@ -37,15 +39,15 @@ func getPersonByID(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": person})
 }
 
-func addPerson(c *gin.Context) {
-	var json Person
+func AddPerson(c *gin.Context) {
+	var json database.Person
 
 	if err := c.ShouldBindJSON(&json); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	_, err := DbAddPerson(json)
+	_, err := database.DbAddPerson(json)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err})
 	}
@@ -53,19 +55,19 @@ func addPerson(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Success"})
 }
 
-func updatePerson(c *gin.Context) {
+func UpdatePerson(c *gin.Context) {
 	personID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
 	}
 
-	var json Person
+	var json database.Person
 	if err := c.ShouldBindJSON(&json); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	if _, err := DbUpdatePerson(json, personID); err != nil {
+	if _, err := database.DbUpdatePerson(json, personID); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err})
 	}
 
@@ -73,15 +75,22 @@ func updatePerson(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Success"})
 }
 
-func deletePerson(c *gin.Context) {
+func DeletePerson(c *gin.Context) {
 	personID, err := strconv.Atoi(c.Params.ByName("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
 	}
 
-	if _, err := DbDeletePerson(personID); err != nil {
+	if _, err := database.DbDeletePerson(personID); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "id #" + strconv.Itoa(personID) + " deleted"})
+}
+
+// checkErr is ...
+func checkErr(err error) {
+	if err != nil {
+		log.Fatal(err)
+	}
 }

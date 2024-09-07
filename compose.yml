@@ -1,8 +1,21 @@
 services:
-  app:
+  api:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: app
     ports:
       - 8080:8080
+    container_name: api
+    environment:
+      - DATABASE_FILE=/var/tmp/database.db
+    volumes:
+      - ./data:/var/tmp
+    depends_on:
+      - db
+
+  # Creates a database container bootstrapped with data
+  db:
+    build: ./docker/db
+    container_name: db
+    volumes:
+      - ./data:/var/tmp

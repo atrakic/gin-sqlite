@@ -1,4 +1,4 @@
-module github.com/atrakic/gin-sqlite-demo
+module github.com/atrakic/gin-sqlite
 
 go 1.19
 

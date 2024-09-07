@@ -1,6 +1,7 @@
-package main
+package database
 
 import (
+	"os"
 	"database/sql"
 	"log"
 	"strconv"
@@ -21,7 +22,8 @@ type Person struct {
 
 // ConnectDatabase is ...
 func ConnectDatabase() error {
-	db, err := sql.Open("sqlite3", "./person.db")
+	dataSourceName := os.Getenv("DATABASE_FILE")
+	db, err := sql.Open("sqlite3", dataSourceName)
 	if err != nil {
 		return err
 	}
@@ -168,11 +170,4 @@ func DbGetPersonByID(id string) (Person, error) {
 		return Person{}, sqlErr
 	}
 	return person, nil
-}
-
-// checkErr is ...
-func checkErr(err error) {
-	if err != nil {
-		log.Fatal(err)
-	}
 }

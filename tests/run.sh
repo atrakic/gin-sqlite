@@ -3,4 +3,3 @@
 set -e
 
 go run .
-
