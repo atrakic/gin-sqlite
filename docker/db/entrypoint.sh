@@ -1,6 +1,7 @@
 #!/bin/bash
 
 set -e
+
 database_file="${DATABASE_FILE:-/var/tmp/database.db}"
 
 sqlite3 "$database_file" <<EOF
