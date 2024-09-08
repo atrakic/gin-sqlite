@@ -4,7 +4,10 @@ OPTIONS ?= --build --remove-orphans --force-recreate
 
 APP ?= api
 
-all:
+all: build test clean
+	docker-compose ps -a
+
+build:
 	docker-compose up $(OPTIONS) -d
 
 %:
