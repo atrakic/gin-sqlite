@@ -19,3 +19,26 @@ services:
     container_name: db
     volumes:
       - ./data:/var/tmp
+
+  ## Inspirations taken from: https://gcollazo.com/optimal-sqlite-settings-for-django/
+  # Creates a backup container that backs up the database to a cloud storage (optional)
+  backup:
+    build: ./docker/backup
+    container_name: backup
+    volumes:
+      - ./data:/var/tmp
+      - ./backup:/var/backup
+    environment:
+      - BACKUP_DIR=/var/backup
+      - DATABASE_FILE=/var/tmp/database.db
+      ## AWS S3 ##
+      #- AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-}
+      #- AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}
+      #- AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-}
+      #- AWS_BUCKET_NAME=${AWS_BUCKET_NAME:-}
+      ## Azure Storage Account ##
+      #- AZURE_STORAGE_ACCOUNT=${AZURE_STORAGE_ACCOUNT:-}
+      #- AZURE_STORAGE_KEY=${AZURE_STORAGE_KEY:-}
+      #- AZURE_CONTAINER_NAME=${AZURE_CONTAINER_NAME:-}
+    depends_on:
+      - db

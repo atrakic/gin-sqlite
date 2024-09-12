@@ -1,12 +1,16 @@
-#!/bin/bash
+#!/bin/bash -x
 
 set -e
 
 database_file="${DATABASE_FILE:-/var/tmp/database.db}"
 
+## https://gcollazo.com/optimal-sqlite-settings-for-django/
+
 sqlite3 "$database_file" <<EOF
+PRAGMA journal_mode = WAL;
+PRAGMA synchronous = NORMAL;
 CREATE TABLE IF NOT EXISTS people (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id INTEGER PRIMARY KEY AUTOINCREMENT unique,
     first_name TEXT NOT NULL,
     last_name TEXT NOT NULL,
     email TEXT NOT NULL
