@@ -8,6 +8,8 @@ services:
     container_name: api
     environment:
       - DATABASE_FILE=/var/tmp/database.db
+      - ADMIN_USER=${ADMIN_USER:-admin}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin}
     volumes:
       - ./data:/var/tmp
     depends_on:
