@@ -31,7 +31,7 @@ deps:
 # Run the project
 run:
 	$(GOBUILD) -o $(BINARY_NAME) $(MAIN_PACKAGE)
-	./$(BINARY_NAME)
+	DATABASE_FILE=./tests/fixtures.db ./$(BINARY_NAME)
 
 # Default target
 default: build

@@ -2,12 +2,14 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"net/http"
+	"os"
+	"time"
+
 	"github.com/atrakic/gin-sqlite/api"
 	"github.com/atrakic/gin-sqlite/database"
 	"github.com/gin-gonic/gin"
-	"log"
-	"net/http"
-	"time"
 )
 
 func main() {
@@ -42,8 +44,17 @@ func setupRouter() *gin.Engine {
 }
 
 func basicAuth(c *gin.Context) {
+	_admin := os.Getenv("ADMIN_USER")
+	if _admin == "" {
+		_admin = "admin"
+	}
+	_password := os.Getenv("ADMIN_PASSWORD")
+	if _password == "" {
+		_password = "secret"
+	}
+
 	user, password, hasAuth := c.Request.BasicAuth()
-	if hasAuth && user == "admin" && password == "secret" {
+	if hasAuth && user == _admin && password == _password {
 		log.Println("User authenticated")
 	} else {
 		c.Abort()
