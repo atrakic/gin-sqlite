@@ -15,6 +15,7 @@ import (
 func main() {
 	if err := database.ConnectDatabase(); err != nil {
 		log.Fatal(err)
+		os.Exit(1)
 	}
 
 	log.Println("Starting server...")

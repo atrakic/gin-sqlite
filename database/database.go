@@ -28,6 +28,24 @@ func ConnectDatabase() error {
 		return err
 	}
 
+	// Create table if not exists
+	sqlStmt := `
+	PRAGMA journal_mode = WAL;
+	PRAGMA synchronous = NORMAL;
+	PRAGMA temp_store  = MEMORY;
+	CREATE TABLE IF NOT EXISTS people (
+		id INTEGER PRIMARY KEY AUTOINCREMENT unique,
+		first_name TEXT not null,
+		last_name TEXT not null,
+		email TEXT not null unique);
+	INSERT or IGNORE INTO people VALUES (1, 'Foo','Bar','foo@bar.com');
+	`
+	_, err = db.Exec(sqlStmt)
+	if err != nil {
+		log.Printf("%q: %s\n", err, sqlStmt)
+		return err
+	}
+
 	DB = db
 	return nil
 }
