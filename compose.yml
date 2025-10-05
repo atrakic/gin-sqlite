@@ -24,9 +24,9 @@ services:
 
   ## Inspirations taken from: https://gcollazo.com/optimal-sqlite-settings-for-django/
   # Creates a backup container that backs up the database to a cloud storage (optional)
-  backup:
+  cron-backup:
     build: ./docker/backup
-    container_name: backup
+    container_name: cron-backup
     volumes:
       - ./data:/var/tmp
       - ./backup:/var/backup
