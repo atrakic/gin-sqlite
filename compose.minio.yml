@@ -1,0 +1,28 @@
+services:
+  minio:
+    image: quay.io/minio/minio
+    command: [ "server", "--console-address", ":9001", "/data" ]
+    container_name: minio
+    ports:
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+
+  createbuckets:
+    image: quay.io/minio/mc:RELEASE.2025-03-12T17-29-24Z
+    depends_on:
+      - minio
+    restart: on-failure
+    # Bucket name cannot be shorter than 3 characters
+    entrypoint: >
+      /bin/sh -c "
+      sleep 5;
+      /usr/bin/mc alias set dockerminio http://minio:9000 minioadmin minioadmin;
+      /usr/bin/mc mb dockerminio/my-bucket/some-directory;
+      /usr/bin/mc mb dockerminio/mydb;
+      exit 0;
+      "
+#/usr/bin/mc mb --region --region=us-east-1 dockerminio/my-bucket/some-directory;
+#/usr/bin/mc mb --region --region=us-east-1 dockerminio/mydb;
