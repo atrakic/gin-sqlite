@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
-#
-# Run using cron to backup sqlite db every hour
+
+## Rolling backups using External storage
+## https://litestream.io/external-storage/
+
 set -ex -o pipefail
 
 # Set the path to the backup directory
@@ -30,9 +32,6 @@ sqlite3 "$BACKUP_FILE" 'PRAGMA integrity_check'
 # gzip the backup file
 gzip "$BACKUP_FILE"
 
-## Rolling backups using External storage
-## https://litestream.io/external-storage/
-
 if [ -n "$AWS_ACCESS_KEY_ID" ] && [ -n "$AWS_SECRET_ACCESS_KEY" ]; then
 
     if [ -n "$AWS_BACKUP_BUCKET" ]; then
@@ -41,7 +40,6 @@ if [ -n "$AWS_ACCESS_KEY_ID" ] && [ -n "$AWS_SECRET_ACCESS_KEY" ]; then
     fi
 
     # Install aws cli on alpine if not already installed
-    which pip || apk add --no-cache py-pip
     which aws || pip install awscli
 
     # 1-day, rolling hourly backup
@@ -52,9 +50,9 @@ if [ -n "$AWS_ACCESS_KEY_ID" ] && [ -n "$AWS_SECRET_ACCESS_KEY" ]; then
 
     # 1-month, rolling hourly backup
     aws s3 cp "$BACKUP_FILE.gz" s3://"$AWS_BACKUP_BUCKET"/backup-"$(date +%d%H)".gz
+    backup_status=$?
 
-else
-    echo "AWS backup not configured"
+    echo "AWS backup executed"
 fi
 
 ## Backup to Azure Blob Storage
@@ -69,7 +67,6 @@ then
     fi
 
     # Install azure-cli on alpine
-    which pip || apk add --no-cache py-pip
     which aws || pip install azure-cli
 
     # 1-day, rolling hourly backup
@@ -80,10 +77,11 @@ then
 
     # 1-month, rolling hourly backup
     az storage blob upload --account-name "$AZURE_STORAGE_ACCOUNT" --account-key "$AZURE_STORAGE_KEY" --container-name "$AZURE_CONTAINER" --file "$BACKUP_FILE.gz" --name backup-"$(date +%d%H)".gz
+    backup_status=$?
 
-else
-    echo "Azure backup not configured"
+    echo "Azure backup executed"
 fi
 
+# https://deadmanssnitch.com/
 # Notify dead man snitch if back up completed successfully.
-#curl -d s=$? https://nosnch.in/xxxxxxxxxx &> /dev/null
+if [[ -n "$snitch_url" ]]; then curl -d s="$backup_status" "$snitch_url" &> /dev/null; fi
