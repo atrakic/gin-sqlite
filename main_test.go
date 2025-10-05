@@ -18,7 +18,7 @@ import (
 // setupTestDatabase creates an in-memory SQLite database for testing
 func setupTestDatabase(t *testing.T) {
 	// Set environment variable for test database
-	os.Setenv("DATABASE_FILE", ":memory:")
+	t.Setenv("DATABASE_FILE", ":memory:")
 
 	// Connect to the test database
 	err := database.ConnectDatabase()
