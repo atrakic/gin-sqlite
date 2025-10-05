@@ -17,6 +17,11 @@ build:
 healthcheck:
 	docker inspect $(APP) --format "{{ (index (.State.Health.Log) 0).Output }}"
 
+litestream:
+	export COMPOSE_FILE=compose.yml:compose.litestream.yml DOCKER_BUILDKIT=1 && \
+							 docker-compose up $(OPTIONS) -d && \
+							 docker-compose logs -f litestream
+
 test:
 	./tests/e2e.sh
 

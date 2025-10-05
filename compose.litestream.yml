@@ -1,0 +1,11 @@
+services:
+  litestream:
+    build:
+      context: ./docker/litestream
+    image: local/litestream:latest
+    container_name: litestream
+    env_file:
+      - .env
+    volumes:
+      - ${DATA_DIR:-../data}:/data
+    restart: unless-stopped
