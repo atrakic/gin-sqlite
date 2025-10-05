@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"testing"
 
 	"github.com/atrakic/gin-sqlite/api"
@@ -15,10 +14,23 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// Test configuration
+const (
+	testAdminUser     = "admin"
+	testAdminPassword = "secret"
+	testDatabaseFile  = ":memory:"
+)
+
+// setupTestEnv sets up all required environment variables for testing
+func setupTestEnv(t *testing.T) {
+	t.Setenv("DATABASE_FILE", testDatabaseFile)
+	t.Setenv("ADMIN_USER", testAdminUser)
+	t.Setenv("ADMIN_PASSWORD", testAdminPassword)
+}
+
 // setupTestDatabase creates an in-memory SQLite database for testing
 func setupTestDatabase(t *testing.T) {
-	// Set environment variable for test database
-	t.Setenv("DATABASE_FILE", ":memory:")
+	setupTestEnv(t)
 
 	// Connect to the test database
 	err := database.ConnectDatabase()
@@ -65,6 +77,25 @@ func setupTestRouter() *gin.Engine {
 	}
 
 	return r
+}
+
+// makeAuthenticatedRequest creates an HTTP request with basic auth credentials
+func makeAuthenticatedRequest(method, url string, body []byte) *http.Request {
+	req, _ := http.NewRequest(method, url, bytes.NewBuffer(body))
+	if body != nil {
+		req.Header.Set("Content-Type", "application/json")
+	}
+	req.SetBasicAuth(testAdminUser, testAdminPassword)
+	return req
+}
+
+// createTestPerson returns a test person struct
+func createTestPerson(firstName, lastName, email string) database.Person {
+	return database.Person{
+		FirstName: firstName,
+		LastName:  lastName,
+		Email:     email,
+	}
 }
 
 func TestPingRoute(t *testing.T) {
@@ -139,23 +170,12 @@ func TestAddPersonWithAuth(t *testing.T) {
 	setupTestDatabase(t)
 	router := setupTestRouter()
 
-	// Set auth environment variables
-	os.Setenv("ADMIN_USER", "admin")
-	os.Setenv("ADMIN_PASSWORD", "secret")
-
-	newPerson := database.Person{
-		FirstName: "Alice",
-		LastName:  "Wonder",
-		Email:     "alice.wonder@example.com",
-	}
-
+	newPerson := createTestPerson("Alice", "Wonder", "alice.wonder@example.com")
 	jsonData, err := json.Marshal(newPerson)
 	require.NoError(t, err)
 
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("POST", "/api/v1/person", bytes.NewBuffer(jsonData))
-	req.Header.Set("Content-Type", "application/json")
-	req.SetBasicAuth("admin", "secret")
+	req := makeAuthenticatedRequest("POST", "/api/v1/person", jsonData)
 	router.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)
@@ -172,12 +192,7 @@ func TestAddPersonWithoutAuth(t *testing.T) {
 	setupTestDatabase(t)
 	router := setupTestRouter()
 
-	newPerson := database.Person{
-		FirstName: "Alice",
-		LastName:  "Wonder",
-		Email:     "alice.wonder@example.com",
-	}
-
+	newPerson := createTestPerson("Alice", "Wonder", "alice.wonder@example.com")
 	jsonData, err := json.Marshal(newPerson)
 	require.NoError(t, err)
 
@@ -200,23 +215,12 @@ func TestUpdatePersonWithAuth(t *testing.T) {
 	setupTestDatabase(t)
 	router := setupTestRouter()
 
-	// Set auth environment variables
-	os.Setenv("ADMIN_USER", "admin")
-	os.Setenv("ADMIN_PASSWORD", "secret")
-
-	updatedPerson := database.Person{
-		FirstName: "Johnny",
-		LastName:  "Doe",
-		Email:     "johnny.doe@example.com",
-	}
-
+	updatedPerson := createTestPerson("Johnny", "Doe", "johnny.doe@example.com")
 	jsonData, err := json.Marshal(updatedPerson)
 	require.NoError(t, err)
 
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("PUT", "/api/v1/person/1", bytes.NewBuffer(jsonData))
-	req.Header.Set("Content-Type", "application/json")
-	req.SetBasicAuth("admin", "secret")
+	req := makeAuthenticatedRequest("PUT", "/api/v1/person/1", jsonData)
 	router.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)
@@ -233,13 +237,8 @@ func TestDeletePersonWithAuth(t *testing.T) {
 	setupTestDatabase(t)
 	router := setupTestRouter()
 
-	// Set auth environment variables
-	os.Setenv("ADMIN_USER", "admin")
-	os.Setenv("ADMIN_PASSWORD", "secret")
-
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("DELETE", "/api/v1/person/3", nil)
-	req.SetBasicAuth("admin", "secret")
+	req := makeAuthenticatedRequest("DELETE", "/api/v1/person/3", nil)
 	router.ServeHTTP(w, req)
 
 	// The delete operation may return 500 due to error handling in the API
@@ -252,14 +251,8 @@ func TestAddPersonInvalidJSON(t *testing.T) {
 	setupTestDatabase(t)
 	router := setupTestRouter()
 
-	// Set auth environment variables
-	os.Setenv("ADMIN_USER", "admin")
-	os.Setenv("ADMIN_PASSWORD", "secret")
-
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("POST", "/api/v1/person", bytes.NewBuffer([]byte("invalid json")))
-	req.Header.Set("Content-Type", "application/json")
-	req.SetBasicAuth("admin", "secret")
+	req := makeAuthenticatedRequest("POST", "/api/v1/person", []byte("invalid json"))
 	router.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
