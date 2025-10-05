@@ -9,7 +9,7 @@ services:
     environment:
       - DATABASE_FILE=/var/tmp/database.db
       - ADMIN_USER=${ADMIN_USER:-admin}
-      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-secret}
     volumes:
       - ./data:/var/tmp
     depends_on:
