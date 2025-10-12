@@ -32,6 +32,52 @@ func ConnectDatabase() error {
 	return nil
 }
 
+// InitializeDatabase creates the people table if it doesn't exist
+func InitializeDatabase() error {
+	query := `
+	CREATE TABLE IF NOT EXISTS people (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		first_name TEXT NOT NULL,
+		last_name TEXT NOT NULL,
+		email TEXT UNIQUE NOT NULL
+	);`
+
+	_, err := DB.Exec(query)
+	if err != nil {
+		return err
+	}
+
+	// Insert some sample data if table is empty
+	var count int
+	err = DB.QueryRow("SELECT COUNT(*) FROM people").Scan(&count)
+	if err != nil {
+		log.Printf("Warning: Could not check table count: %v", err)
+		return nil // Don't fail initialization if we can't check count
+	}
+
+	if count == 0 {
+		log.Println("Initializing database with sample data...")
+		// Use INSERT OR IGNORE to avoid duplicate email constraint errors
+		sampleQueries := []string{
+			"INSERT OR IGNORE INTO people (first_name, last_name, email) VALUES ('John', 'Doe', 'john.doe@example.com')",
+			"INSERT OR IGNORE INTO people (first_name, last_name, email) VALUES ('Jane', 'Smith', 'jane.smith@example.com')",
+			"INSERT OR IGNORE INTO people (first_name, last_name, email) VALUES ('Bob', 'Johnson', 'bob.johnson@example.com')",
+		}
+
+		for _, query := range sampleQueries {
+			_, err := DB.Exec(query)
+			if err != nil {
+				log.Printf("Warning: Error adding sample data: %v", err)
+			}
+		}
+		log.Println("Sample data initialization completed")
+	} else {
+		log.Printf("Database already contains %d records, skipping sample data initialization", count)
+	}
+
+	return nil
+}
+
 // DbGetPersons is ...
 func DbGetPersons(count int) ([]Person, error) {
 
