@@ -1,8 +1,10 @@
-MAKEFLAGS += --silent
+#MAKEFLAGS += --silent
 
 OPTIONS ?= --build --remove-orphans --force-recreate
 
 APP ?= api
+
+.PHONY: all build test healthcheck clean
 
 all: build test clean
 	docker-compose ps -a
