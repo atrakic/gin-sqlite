@@ -62,3 +62,28 @@ type JWTClaims struct {
 	Username string `json:"username"`
 	jwt.RegisteredClaims
 } // @name JWTClaims
+
+// PaginationRequest represents pagination query parameters
+// @Description Pagination request parameters
+type PaginationRequest struct {
+	Page     int `form:"page" json:"page" example:"1" minimum:"1"`                          // Page number (starting from 1)
+	PageSize int `form:"page_size" json:"page_size" example:"10" minimum:"1" maximum:"100"` // Number of items per page
+} // @name PaginationRequest
+
+// PaginationMeta represents pagination metadata
+// @Description Pagination metadata information
+type PaginationMeta struct {
+	CurrentPage int   `json:"current_page" example:"1"`      // Current page number
+	PageSize    int   `json:"page_size" example:"10"`        // Number of items per page
+	TotalPages  int   `json:"total_pages" example:"5"`       // Total number of pages
+	TotalItems  int64 `json:"total_items" example:"50"`      // Total number of items
+	HasNextPage bool  `json:"has_next_page" example:"true"`  // Whether there is a next page
+	HasPrevPage bool  `json:"has_prev_page" example:"false"` // Whether there is a previous page
+} // @name PaginationMeta
+
+// PaginatedResponse represents a paginated API response
+// @Description Paginated API response
+type PaginatedResponse struct {
+	Data       interface{}    `json:"data"`       // Response data
+	Pagination PaginationMeta `json:"pagination"` // Pagination metadata
+} // @name PaginatedResponse

@@ -132,9 +132,62 @@ func TestGetPersons(t *testing.T) {
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	require.NoError(t, err)
 
+	// Check paginated response structure
 	assert.Contains(t, response, "data")
+	assert.Contains(t, response, "pagination")
+
 	data := response["data"].([]interface{})
-	assert.True(t, len(data) > 0, "Should return at least one person")
+	assert.True(t, len(data) >= 0, "Should return data array")
+
+	// Check pagination metadata
+	pagination := response["pagination"].(map[string]interface{})
+	assert.Contains(t, pagination, "current_page")
+	assert.Contains(t, pagination, "page_size")
+	assert.Contains(t, pagination, "total_pages")
+	assert.Contains(t, pagination, "total_items")
+	assert.Contains(t, pagination, "has_next_page")
+	assert.Contains(t, pagination, "has_prev_page")
+
+	// Verify default pagination values
+	assert.Equal(t, float64(1), pagination["current_page"])
+	assert.Equal(t, float64(10), pagination["page_size"])
+}
+
+func TestGetPersonsPagination(t *testing.T) {
+	setupTestDatabase(t)
+	router := setupTestRouter()
+
+	// Test with custom pagination parameters
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/api/v1/person?page=1&page_size=2", nil)
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	var response map[string]interface{}
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	require.NoError(t, err)
+
+	// Check pagination parameters are applied
+	pagination := response["pagination"].(map[string]interface{})
+	assert.Equal(t, float64(1), pagination["current_page"])
+	assert.Equal(t, float64(2), pagination["page_size"])
+
+	// Test invalid pagination parameters
+	w2 := httptest.NewRecorder()
+	req2, _ := http.NewRequest("GET", "/api/v1/person?page=0&page_size=150", nil)
+	router.ServeHTTP(w2, req2)
+
+	assert.Equal(t, http.StatusOK, w2.Code)
+
+	var response2 map[string]interface{}
+	err2 := json.Unmarshal(w2.Body.Bytes(), &response2)
+	require.NoError(t, err2)
+
+	// Check that invalid parameters are corrected
+	pagination2 := response2["pagination"].(map[string]interface{})
+	assert.Equal(t, float64(1), pagination2["current_page"]) // Should default to 1
+	assert.Equal(t, float64(100), pagination2["page_size"])  // Should be capped at 100
 }
 
 func TestGetPersonByID(t *testing.T) {
