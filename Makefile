@@ -16,7 +16,7 @@ GOMOD=$(GOCMD) mod
 LDFLAGS=-ldflags "-w -s"
 BUILD_FLAGS=-trimpath
 
-.PHONY: all build clean test deps tidy run docker
+.PHONY: all build clean test deps tidy run docker swagger
 
 all: clean deps build
 
@@ -41,7 +41,10 @@ run: build
 	$(BUILD_DIR)/$(BINARY_NAME)
 
 docker:
-	docker build -t $(BINARY_NAME) -f ../Dockerfile ..
+	docker build -t $(BINARY_NAME) .
+
+swagger:
+	swag init -g cmd/server/main.go -o docs --pd --parseInternal
 
 help:
 	@echo "Available targets:"
@@ -52,4 +55,5 @@ help:
 	@echo "  tidy     - Tidy go modules"
 	@echo "  run      - Build and run the application"
 	@echo "  docker   - Build Docker image"
+	@echo "  swagger  - Generate Swagger documentation"
 	@echo "  help     - Show this help"

@@ -1,3 +1,20 @@
+// Package main provides the entry point for the Gin SQLite Demo API server.
+//
+//	@title			Gin SQLite Demo API
+//	@version		1.0
+//	@description	A simple REST API for managing persons using Gin and SQLite
+//	@termsOfService	http://swagger.io/terms/
+//
+//	@contact.name	API Support
+//	@contact.url	https://github.com/atrakic/gin-sqlite-demo
+//
+//	@license.name	MIT
+//	@license.url	https://github.com/atrakic/gin-sqlite-demo/blob/main/LICENSE
+//
+//	@host		localhost:8080
+//	@BasePath	/api/v1
+//
+//	@securityDefinitions.basic	BasicAuth
 package main
 
 import (
@@ -9,7 +26,10 @@ import (
 
 	"github.com/atrakic/gin-sqlite/internal/api"
 	"github.com/atrakic/gin-sqlite/internal/database"
+	_ "github.com/atrakic/gin-sqlite/internal/models" // For Swagger annotations
 	"github.com/gin-gonic/gin"
+	"github.com/swaggo/files"
+	"github.com/swaggo/gin-swagger"
 )
 
 func main() {
@@ -37,6 +57,24 @@ func main() {
 func setupRouter() *gin.Engine {
 	r := gin.Default()
 
+	// Serve only swagger.json file
+	r.GET("/docs/swagger.json", func(c *gin.Context) {
+		c.File("./docs/swagger.json")
+	})
+
+	// Swagger endpoint
+	r.GET("/swagger/*any",
+		ginSwagger.WrapHandler(swaggerFiles.Handler,
+			ginSwagger.URL("/docs/swagger.json")))
+
+	// PingHandler handles the ping endpoint
+	// @Summary Health check endpoint
+	// @Description Returns a pong message with timestamp
+	// @Tags health
+	// @Accept json
+	// @Produce json
+	// @Success 200 {object} models.HealthCheckResponse "Pong response with timestamp"
+	// @Router /ping [get]
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"message": "pong " + fmt.Sprint(time.Now().Unix())})
 	})

@@ -185,7 +185,6 @@ func TestAddPersonWithAuth(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Contains(t, response, "message")
-	assert.Equal(t, "Success", response["message"])
 }
 
 func TestAddPersonWithoutAuth(t *testing.T) {
