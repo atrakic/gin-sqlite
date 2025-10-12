@@ -11,21 +11,18 @@ jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Set up Go ${{ matrix.go-version }}
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
           check-latest: true
 
       - name: Lint
-        uses: golangci/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@v8
         with:
           version: latest
           args: --timeout 5m
@@ -33,7 +30,7 @@ jobs:
       - name: Build
         run: |
           go get -d -v
-          go build -v .
+          go build -v ./...
 
       - name: Test with the Go CLI
-        run: go test -v .
+        run: go test -v ./...
