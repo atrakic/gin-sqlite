@@ -1,12 +1,12 @@
 package database
 
 import (
-	"os"
 	"database/sql"
 	"log"
+	"os"
 	"strconv"
 
-	_ "github.com/mattn/go-sqlite3"
+	_ "modernc.org/sqlite"
 )
 
 // DB is ...
@@ -23,7 +23,7 @@ type Person struct {
 // ConnectDatabase is ...
 func ConnectDatabase() error {
 	dataSourceName := os.Getenv("DATABASE_FILE")
-	db, err := sql.Open("sqlite3", dataSourceName)
+	db, err := sql.Open("sqlite", dataSourceName)
 	if err != nil {
 		return err
 	}
