@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/atrakic/gin-sqlite/database"
+	"github.com/atrakic/gin-sqlite/internal/database"
 	"github.com/gin-gonic/gin"
 )
 
