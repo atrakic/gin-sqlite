@@ -6,11 +6,8 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-#SCRIPT_ROOT=$(dirname "${BASH_SOURCE[0]}")
-#$SCRIPT_ROOT/run.sh
-
-URL="localhost:8080/api/v1/person"
-
+SCRIPT_ROOT=$(dirname "${BASH_SOURCE[0]}")
+URL="${URL:-localhost:8080/api/v1/person}"
 ADMIN_USER="${ADMIN_USER:-admin}"
 ADMIN_PASSWORD="${ADMIN_PASSWORD:-secret}"
 AUTH_CREDS="$ADMIN_USER:$ADMIN_PASSWORD"

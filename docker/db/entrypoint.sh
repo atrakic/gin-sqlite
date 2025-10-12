@@ -19,8 +19,3 @@ CREATE TABLE IF NOT EXISTS people (
 -- Data:
 INSERT or IGNORE INTO people VALUES (1, 'Foo','Bar','foo@bar.com');
 EOF
-
-while true; do
-    sqlite3 "$database_file" "select count(*) from people;"
-    sleep 1
-done

@@ -43,4 +43,4 @@ services:
       #- AZURE_STORAGE_KEY=${AZURE_STORAGE_KEY:-}
       #- AZURE_CONTAINER_NAME=${AZURE_CONTAINER_NAME:-}
     depends_on:
-      - db
+      - api
