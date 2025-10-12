@@ -6,14 +6,59 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/atrakic/gin-sqlite/internal/auth"
 	"github.com/atrakic/gin-sqlite/internal/database"
-	_ "github.com/atrakic/gin-sqlite/internal/models" // For Swagger annotations
+	"github.com/atrakic/gin-sqlite/internal/models"
 	"github.com/gin-gonic/gin"
 )
 
 var (
 	count int = 10
 )
+
+// Login authenticates a user and returns a JWT token
+// @Summary User login
+// @Description Authenticate user credentials and return JWT token
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param credentials body models.LoginRequest true "Login credentials"
+// @Success 200 {object} models.LoginResponse "Login successful"
+// @Failure 400 {object} models.APIResponse "Invalid request"
+// @Failure 401 {object} models.APIResponse "Invalid credentials"
+// @Router /auth/login [post]
+func Login(c *gin.Context) {
+	var loginRequest models.LoginRequest
+
+	if err := c.ShouldBindJSON(&loginRequest); err != nil {
+		c.JSON(http.StatusBadRequest, models.APIResponse{
+			Error: "Invalid request format",
+		})
+		return
+	}
+
+	// Validate credentials
+	if !auth.ValidateCredentials(loginRequest.Username, loginRequest.Password) {
+		c.JSON(http.StatusUnauthorized, models.APIResponse{
+			Error: "Invalid username or password",
+		})
+		return
+	}
+
+	// Generate JWT token
+	token, expiresAt, err := auth.GenerateJWT(loginRequest.Username)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.APIResponse{
+			Error: "Failed to generate token",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, models.LoginResponse{
+		Token:     token,
+		ExpiresAt: expiresAt,
+	})
+}
 
 // GetPersons retrieves all persons from the database
 // @Summary Get all persons
@@ -68,7 +113,7 @@ func GetPersonByID(c *gin.Context) {
 // @Param person body models.CreatePersonRequest true "Person to create"
 // @Success 200 {object} models.APIResponse "Success message"
 // @Failure 400 {object} models.APIResponse "Invalid input"
-// @Security BasicAuth
+// @Security BearerAuth
 // @Router /person [post]
 func AddPerson(c *gin.Context) {
 	var json database.Person
@@ -94,7 +139,7 @@ func AddPerson(c *gin.Context) {
 // @Param person body models.UpdatePersonRequest true "Person to update"
 // @Success 200 {object} models.APIResponse "Success message"
 // @Failure 400 {object} models.APIResponse "Invalid input or ID"
-// @Security BasicAuth
+// @Security BearerAuth
 // @Router /person/{id} [put]
 func UpdatePerson(c *gin.Context) {
 	personID, err := strconv.Atoi(c.Param("id"))
@@ -126,7 +171,7 @@ func UpdatePerson(c *gin.Context) {
 // @Success 200 {object} models.APIResponse "Success message"
 // @Failure 400 {object} models.APIResponse "Invalid ID"
 // @Failure 500 {object} models.APIResponse "Internal server error"
-// @Security BasicAuth
+// @Security BearerAuth
 // @Router /person/{id} [delete]
 func DeletePerson(c *gin.Context) {
 	personID, err := strconv.Atoi(c.Params.ByName("id"))
@@ -144,6 +189,6 @@ func DeletePerson(c *gin.Context) {
 // checkErr is ...
 func checkErr(err error) {
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("Database error: %v", err)
 	}
 }

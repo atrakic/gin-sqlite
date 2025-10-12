@@ -1,6 +1,8 @@
 // Package models defines the API models and DTOs for Swagger documentation
 package models
 
+import "github.com/golang-jwt/jwt/v5"
+
 // Person represents a person in the database
 // @Description Person information
 // @ID Person
@@ -40,3 +42,23 @@ type APIResponse struct {
 type HealthCheckResponse struct {
 	Message string `json:"message" example:"pong 1697123456"` // Health check message with timestamp
 } // @name HealthCheckResponse
+
+// LoginRequest represents the login request body
+// @Description Login request body
+type LoginRequest struct {
+	Username string `json:"username" binding:"required" example:"admin"`  // Username (required)
+	Password string `json:"password" binding:"required" example:"secret"` // Password (required)
+} // @name LoginRequest
+
+// LoginResponse represents the login response body
+// @Description Login response body
+type LoginResponse struct {
+	Token     string `json:"token" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."` // JWT token
+	ExpiresAt int64  `json:"expires_at" example:"1697209856"`                         // Token expiration timestamp
+} // @name LoginResponse
+
+// JWTClaims represents the JWT token claims
+type JWTClaims struct {
+	Username string `json:"username"`
+	jwt.RegisteredClaims
+} // @name JWTClaims

@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/atrakic/gin-sqlite/internal/api"
+	"github.com/atrakic/gin-sqlite/internal/auth"
 	"github.com/atrakic/gin-sqlite/internal/database"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
@@ -26,6 +27,7 @@ func setupTestEnv(t *testing.T) {
 	t.Setenv("DATABASE_FILE", testDatabaseFile)
 	t.Setenv("ADMIN_USER", testAdminUser)
 	t.Setenv("ADMIN_PASSWORD", testAdminPassword)
+	t.Setenv("JWT_SECRET", "test-secret-key-for-jwt-testing")
 }
 
 // setupTestDatabase creates an in-memory SQLite database for testing
@@ -71,21 +73,28 @@ func setupTestRouter() *gin.Engine {
 		v1.GET("person/:id", api.GetPersonByID)
 
 		// Needs authentication
-		v1.POST("person", basicAuth, api.AddPerson)
-		v1.PUT("person/:id", basicAuth, api.UpdatePerson)
-		v1.DELETE("person/:id", basicAuth, api.DeletePerson)
+		v1.POST("person", jwtAuth, api.AddPerson)
+		v1.PUT("person/:id", jwtAuth, api.UpdatePerson)
+		v1.DELETE("person/:id", jwtAuth, api.DeletePerson)
 	}
 
 	return r
 }
 
-// makeAuthenticatedRequest creates an HTTP request with basic auth credentials
+// makeAuthenticatedRequest creates an HTTP request with JWT Bearer token
 func makeAuthenticatedRequest(method, url string, body []byte) *http.Request {
 	req, _ := http.NewRequest(method, url, bytes.NewBuffer(body))
 	if body != nil {
 		req.Header.Set("Content-Type", "application/json")
 	}
-	req.SetBasicAuth(testAdminUser, testAdminPassword)
+
+	// Generate JWT token for testing
+	token, _, err := auth.GenerateJWT(testAdminUser)
+	if err != nil {
+		panic("Failed to generate test JWT token: " + err.Error())
+	}
+
+	req.Header.Set("Authorization", "Bearer "+token)
 	return req
 }
 
@@ -207,7 +216,7 @@ func TestAddPersonWithoutAuth(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Contains(t, response, "error")
-	assert.Equal(t, "Authentication failed", response["error"])
+	assert.Equal(t, "Authorization header required", response["error"])
 }
 
 func TestUpdatePersonWithAuth(t *testing.T) {

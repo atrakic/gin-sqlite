@@ -14,19 +14,23 @@
 //	@host		localhost:8080
 //	@BasePath	/api/v1
 //
-//	@securityDefinitions.basic	BasicAuth
+//	@securityDefinitions.apikey	BearerAuth
+//	@in							header
+//	@name						Authorization
+//	@description				Type "Bearer" followed by a space and JWT token.
 package main
 
 import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
+	"strings"
 	"time"
 
 	"github.com/atrakic/gin-sqlite/internal/api"
+	"github.com/atrakic/gin-sqlite/internal/auth"
 	"github.com/atrakic/gin-sqlite/internal/database"
-	_ "github.com/atrakic/gin-sqlite/internal/models" // For Swagger annotations
+	"github.com/atrakic/gin-sqlite/internal/models"
 	"github.com/gin-gonic/gin"
 	"github.com/swaggo/files"
 	"github.com/swaggo/gin-swagger"
@@ -37,18 +41,29 @@ func main() {
 		log.Fatal(err)
 	}
 
+	// Initialize database tables
+	if err := database.InitializeDatabase(); err != nil {
+		log.Fatal("Failed to initialize database:", err)
+	}
+
 	log.Println("Starting server...")
 	r := setupRouter()
+
+	// Auth endpoints
+	authGroup := r.Group("/auth")
+	{
+		authGroup.POST("/login", api.Login)
+	}
 
 	v1 := r.Group("/api/v1")
 	{
 		v1.GET("person", api.GetPersons)
 		v1.GET("person/:id", api.GetPersonByID)
 
-		// Needs authentication
-		v1.POST("person", basicAuth, api.AddPerson)
-		v1.PUT("person/:id", basicAuth, api.UpdatePerson)
-		v1.DELETE("person/:id", basicAuth, api.DeletePerson)
+		// Needs JWT authentication
+		v1.POST("person", jwtAuth, api.AddPerson)
+		v1.PUT("person/:id", jwtAuth, api.UpdatePerson)
+		v1.DELETE("person/:id", jwtAuth, api.DeletePerson)
 	}
 
 	_ = r.Run()
@@ -81,23 +96,39 @@ func setupRouter() *gin.Engine {
 	return r
 }
 
-func basicAuth(c *gin.Context) {
-	_admin := os.Getenv("ADMIN_USER")
-	if _admin == "" {
-		_admin = "admin"
-	}
-	_password := os.Getenv("ADMIN_PASSWORD")
-	if _password == "" {
-		_password = "secret"
-	}
-
-	user, password, hasAuth := c.Request.BasicAuth()
-	if hasAuth && user == _admin && password == _password {
-		log.Println("User authenticated")
-	} else {
+// jwtAuth validates JWT tokens from Authorization header
+func jwtAuth(c *gin.Context) {
+	authHeader := c.GetHeader("Authorization")
+	if authHeader == "" {
+		c.JSON(http.StatusUnauthorized, models.APIResponse{
+			Error: "Authorization header required",
+		})
 		c.Abort()
-		c.Writer.Header().Set("WWW-Authenticate", "Basic realm=Restricted")
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Authentication failed"})
 		return
 	}
+
+	// Check for Bearer token format
+	tokenParts := strings.SplitN(authHeader, " ", 2)
+	if len(tokenParts) != 2 || tokenParts[0] != "Bearer" {
+		c.JSON(http.StatusUnauthorized, models.APIResponse{
+			Error: "Authorization header must be Bearer token",
+		})
+		c.Abort()
+		return
+	}
+
+	// Validate JWT token
+	claims, err := auth.ValidateJWT(tokenParts[1])
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, models.APIResponse{
+			Error: "Invalid or expired token",
+		})
+		c.Abort()
+		return
+	}
+
+	// Set user context for use in handlers
+	c.Set("username", claims.Username)
+	log.Printf("User authenticated: %s", claims.Username)
+	c.Next()
 }
