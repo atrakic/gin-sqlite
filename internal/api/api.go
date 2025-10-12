@@ -12,10 +12,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var (
-	count int = 10
-)
-
 // Login authenticates a user and returns a JWT token
 // @Summary User login
 // @Description Authenticate user credentials and return JWT token
@@ -71,7 +67,7 @@ func Login(c *gin.Context) {
 // @Success 200 {object} models.PaginatedResponse "Paginated list of persons"
 // @Failure 400 {object} models.APIResponse "Invalid pagination parameters"
 // @Failure 500 {object} models.APIResponse "Internal server error"
-// @Router /person [get]
+// @Router /api/v1/person [get]
 func GetPersons(c *gin.Context) {
 	// Parse pagination parameters
 	var pagination models.PaginationRequest
@@ -155,7 +151,7 @@ func GetPersons(c *gin.Context) {
 // @Param id path int true "Person ID"
 // @Success 200 {object} database.Person "Person details"
 // @Failure 404 {object} models.APIResponse "Person not found"
-// @Router /person/{id} [get]
+// @Router /api/v1/person/{id} [get]
 func GetPersonByID(c *gin.Context) {
 	id := c.Param("id")
 
@@ -179,7 +175,7 @@ func GetPersonByID(c *gin.Context) {
 // @Success 200 {object} models.APIResponse "Success message"
 // @Failure 400 {object} models.APIResponse "Invalid input"
 // @Security BearerAuth
-// @Router /person [post]
+// @Router /api/v1/person [post]
 func AddPerson(c *gin.Context) {
 	var json database.Person
 
@@ -205,7 +201,7 @@ func AddPerson(c *gin.Context) {
 // @Success 200 {object} models.APIResponse "Success message"
 // @Failure 400 {object} models.APIResponse "Invalid input or ID"
 // @Security BearerAuth
-// @Router /person/{id} [put]
+// @Router /api/v1/person/{id} [put]
 func UpdatePerson(c *gin.Context) {
 	personID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -237,7 +233,7 @@ func UpdatePerson(c *gin.Context) {
 // @Failure 400 {object} models.APIResponse "Invalid ID"
 // @Failure 500 {object} models.APIResponse "Internal server error"
 // @Security BearerAuth
-// @Router /person/{id} [delete]
+// @Router /api/v1/person/{id} [delete]
 func DeletePerson(c *gin.Context) {
 	personID, err := strconv.Atoi(c.Params.ByName("id"))
 	if err != nil {
