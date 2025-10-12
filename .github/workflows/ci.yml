@@ -27,10 +27,11 @@ jobs:
           version: latest
           args: --timeout 5m
 
+      - name: Install dependencies
+        run: go get ./...
+
       - name: Build
-        run: |
-          go get -d -v
-          go build -v ./...
+        run: go build -v ./...
 
       - name: Test with the Go CLI
         run: go test -v ./...
