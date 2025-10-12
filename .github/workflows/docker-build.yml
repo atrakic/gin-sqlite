@@ -10,9 +10,33 @@ on:
     types: [completed]
 
 jobs:
+  check-pr-status:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    outputs:
+      should-build: ${{ steps.check.outputs.should-build }}
+    steps:
+      - name: Check if PR is draft
+        id: check
+        run: |
+          if [[ "${{ github.event.workflow_run.event }}" != "pull_request" ]]; then
+            echo "should-build=true" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.event.workflow_run.pull_requests }}" == "null" ]] || [[ "${{ github.event.workflow_run.pull_requests }}" == "" ]]; then
+            echo "should-build=true" >> $GITHUB_OUTPUT
+          else
+            # Check if any PR is not a draft
+            draft_status=$(echo '${{ toJson(github.event.workflow_run.pull_requests) }}' | jq -r '.[0].draft // false')
+            if [[ "$draft_status" == "false" ]]; then
+              echo "should-build=true" >> $GITHUB_OUTPUT
+            else
+              echo "should-build=false" >> $GITHUB_OUTPUT
+            fi
+          fi
+
   docker-build:
     name: Docker Build
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    needs: check-pr-status
+    if: ${{ needs.check-pr-status.outputs.should-build == 'true' }}
     uses: dockersamples/.github/.github/workflows/reusable-docker-build.yaml@main
 
     permissions:
