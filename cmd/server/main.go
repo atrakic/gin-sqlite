@@ -57,8 +57,10 @@ func main() {
 func setupRouter() *gin.Engine {
 	r := gin.Default()
 
-	// Serve swagger.json file
-	r.Static("/docs", "./docs")
+	// Serve only swagger.json file
+	r.GET("/docs/swagger.json", func(c *gin.Context) {
+		c.File("./docs/swagger.json")
+	})
 
 	// Swagger endpoint
 	r.GET("/swagger/*any",
