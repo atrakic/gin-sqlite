@@ -26,6 +26,7 @@ import (
 
 	"github.com/atrakic/gin-sqlite/internal/api"
 	"github.com/atrakic/gin-sqlite/internal/database"
+	_ "github.com/atrakic/gin-sqlite/internal/models" // For Swagger annotations
 	"github.com/gin-gonic/gin"
 	"github.com/swaggo/files"
 	"github.com/swaggo/gin-swagger"
@@ -70,7 +71,7 @@ func setupRouter() *gin.Engine {
 	// @Tags health
 	// @Accept json
 	// @Produce json
-	// @Success 200 {object} map[string]interface{} "Pong response with timestamp"
+	// @Success 200 {object} models.HealthCheckResponse "Pong response with timestamp"
 	// @Router /ping [get]
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"message": "pong " + fmt.Sprint(time.Now().Unix())})
