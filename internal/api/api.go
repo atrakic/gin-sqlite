@@ -60,25 +60,90 @@ func Login(c *gin.Context) {
 	})
 }
 
-// GetPersons retrieves all persons from the database
-// @Summary Get all persons
-// @Description Get a list of all persons in the database
+// GetPersons retrieves persons from the database with pagination
+// @Summary Get all persons with pagination
+// @Description Get a paginated list of all persons in the database
 // @Tags persons
 // @Accept json
 // @Produce json
-// @Success 200 {array} database.Person "List of persons"
-// @Failure 400 {object} models.APIResponse "No records found"
+// @Param page query int false "Page number (default: 1)" minimum(1) example(1)
+// @Param page_size query int false "Number of items per page (default: 10, max: 100)" minimum(1) maximum(100) example(10)
+// @Success 200 {object} models.PaginatedResponse "Paginated list of persons"
+// @Failure 400 {object} models.APIResponse "Invalid pagination parameters"
+// @Failure 500 {object} models.APIResponse "Internal server error"
 // @Router /person [get]
 func GetPersons(c *gin.Context) {
-	persons, err := database.DbGetPersons(count)
-	checkErr(err)
+	// Parse pagination parameters
+	var pagination models.PaginationRequest
 
-	if persons == nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "No Records Found"})
+	// Set defaults
+	pagination.Page = 1
+	pagination.PageSize = 10
+
+	// Bind query parameters
+	if err := c.ShouldBindQuery(&pagination); err != nil {
+		c.JSON(http.StatusBadRequest, models.APIResponse{
+			Error: "Invalid pagination parameters: " + err.Error(),
+		})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"data": persons})
+	// Validate pagination parameters
+	if pagination.Page < 1 {
+		pagination.Page = 1
+	}
+	if pagination.PageSize < 1 {
+		pagination.PageSize = 10
+	}
+	if pagination.PageSize > 100 {
+		pagination.PageSize = 100
+	}
+
+	// Calculate offset
+	offset := (pagination.Page - 1) * pagination.PageSize
+
+	// Get total count
+	totalCount, err := database.DbGetPersonsCount()
+	if err != nil {
+		log.Printf("Database error getting count: %v", err)
+		c.JSON(http.StatusInternalServerError, models.APIResponse{
+			Error: "Failed to get total count",
+		})
+		return
+	}
+
+	// Get persons with pagination
+	persons, err := database.DbGetPersons(pagination.PageSize, offset)
+	if err != nil {
+		log.Printf("Database error getting persons: %v", err)
+		c.JSON(http.StatusInternalServerError, models.APIResponse{
+			Error: "Failed to retrieve persons",
+		})
+		return
+	}
+
+	// Calculate pagination metadata
+	totalPages := int((totalCount + int64(pagination.PageSize) - 1) / int64(pagination.PageSize))
+	if totalPages == 0 {
+		totalPages = 1
+	}
+
+	paginationMeta := models.PaginationMeta{
+		CurrentPage: pagination.Page,
+		PageSize:    pagination.PageSize,
+		TotalPages:  totalPages,
+		TotalItems:  totalCount,
+		HasNextPage: pagination.Page < totalPages,
+		HasPrevPage: pagination.Page > 1,
+	}
+
+	// Return paginated response
+	response := models.PaginatedResponse{
+		Data:       persons,
+		Pagination: paginationMeta,
+	}
+
+	c.JSON(http.StatusOK, response)
 }
 
 // GetPersonByID retrieves a person by their ID

@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"log"
 	"os"
-	"strconv"
 
 	_ "modernc.org/sqlite"
 )
@@ -78,10 +77,17 @@ func InitializeDatabase() error {
 	return nil
 }
 
-// DbGetPersons is ...
-func DbGetPersons(count int) ([]Person, error) {
+// DbGetPersonsCount returns the total count of persons in the database
+func DbGetPersonsCount() (int64, error) {
+	var count int64
+	err := DB.QueryRow("SELECT COUNT(*) FROM people").Scan(&count)
+	return count, err
+}
 
-	rows, err := DB.Query("SELECT id, first_name, last_name, email from people LIMIT " + strconv.Itoa(count))
+// DbGetPersons retrieves persons with pagination support
+func DbGetPersons(limit, offset int) ([]Person, error) {
+	query := "SELECT id, first_name, last_name, email FROM people ORDER BY id LIMIT ? OFFSET ?"
+	rows, err := DB.Query(query, limit, offset)
 
 	if err != nil {
 		return nil, err
