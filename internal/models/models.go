@@ -5,7 +5,7 @@ package models
 // @Description Person information
 // @ID Person
 type Person struct {
-	ID        uint   `json:"id" example:"1" format:"uint64"`                      // Person ID
+	ID        uint64 `json:"id" example:"1" format:"uint64"`                      // Person ID
 	FirstName string `json:"first_name" example:"John" maxLength:"50"`            // First name
 	LastName  string `json:"last_name" example:"Doe" maxLength:"50"`              // Last name
 	Email     string `json:"email" example:"john.doe@example.com" format:"email"` // Email address
