@@ -18,7 +18,7 @@ healthcheck:
 	docker inspect $(APP) --format "{{ (index (.State.Health.Log) 0).Output }}"
 
 test:
-	./tests/e2e.sh
+	./test/e2e.sh
 
 clean:
 	docker-compose down --remove-orphans -v --rmi local

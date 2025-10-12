@@ -7,8 +7,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/atrakic/gin-sqlite/api"
-	"github.com/atrakic/gin-sqlite/database"
+	"github.com/atrakic/gin-sqlite/internal/api"
+	"github.com/atrakic/gin-sqlite/internal/database"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

@@ -7,8 +7,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/atrakic/gin-sqlite/api"
-	"github.com/atrakic/gin-sqlite/database"
+	"github.com/atrakic/gin-sqlite/internal/api"
+	"github.com/atrakic/gin-sqlite/internal/database"
 	"github.com/gin-gonic/gin"
 )
 
