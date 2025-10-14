@@ -1,8 +1,9 @@
 name: github pages
 on:
   workflow_dispatch:
-  pull_request_review:
-    types: [submitted]
+  push:
+    branches:
+      - 'main'
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
