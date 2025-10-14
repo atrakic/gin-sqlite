@@ -10,6 +10,7 @@ import (
 	"github.com/atrakic/gin-sqlite/internal/api"
 	"github.com/atrakic/gin-sqlite/internal/auth"
 	"github.com/atrakic/gin-sqlite/internal/database"
+	"github.com/atrakic/gin-sqlite/internal/models"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -99,8 +100,8 @@ func makeAuthenticatedRequest(method, url string, body []byte) *http.Request {
 }
 
 // createTestPerson returns a test person struct
-func createTestPerson(firstName, lastName, email string) database.Person {
-	return database.Person{
+func createTestPerson(firstName, lastName, email string) models.Person {
+	return models.Person{
 		FirstName: firstName,
 		LastName:  lastName,
 		Email:     email,
