@@ -5,19 +5,12 @@ import (
 	"log"
 	"os"
 
+	"github.com/atrakic/gin-sqlite/internal/models"
 	_ "modernc.org/sqlite"
 )
 
 // DB is ...
 var DB *sql.DB
-
-// Person is ...
-type Person struct {
-	ID        uint   `json:"id"`
-	FirstName string `json:"first_name"`
-	LastName  string `json:"last_name"`
-	Email     string `json:"email"`
-}
 
 // ConnectDatabase is ...
 func ConnectDatabase() error {
@@ -85,7 +78,7 @@ func DbGetPersonsCount() (int64, error) {
 }
 
 // DbGetPersons retrieves persons with pagination support
-func DbGetPersons(limit, offset int) ([]Person, error) {
+func DbGetPersons(limit, offset int) ([]models.Person, error) {
 	query := "SELECT id, first_name, last_name, email FROM people ORDER BY id LIMIT ? OFFSET ?"
 	rows, err := DB.Query(query, limit, offset)
 
@@ -95,10 +88,10 @@ func DbGetPersons(limit, offset int) ([]Person, error) {
 
 	defer rows.Close()
 
-	people := make([]Person, 0)
+	people := make([]models.Person, 0)
 
 	for rows.Next() {
-		singlePerson := Person{}
+		singlePerson := models.Person{}
 		err = rows.Scan(&singlePerson.ID, &singlePerson.FirstName, &singlePerson.LastName, &singlePerson.Email)
 
 		if err != nil {
@@ -118,7 +111,7 @@ func DbGetPersons(limit, offset int) ([]Person, error) {
 }
 
 // DbAddPerson is ...
-func DbAddPerson(newPerson Person) (bool, error) {
+func DbAddPerson(newPerson models.Person) (bool, error) {
 
 	tx, err := DB.Begin()
 	if err != nil {
@@ -177,7 +170,7 @@ func DbDeletePerson(personID int) (bool, error) {
 }
 
 // DbUpdatePerson is ...
-func DbUpdatePerson(ourPerson Person, id int) (bool, error) {
+func DbUpdatePerson(ourPerson models.Person, id int) (bool, error) {
 
 	tx, err := DB.Begin()
 	if err != nil {
@@ -206,20 +199,20 @@ func DbUpdatePerson(ourPerson Person, id int) (bool, error) {
 }
 
 // DbGetPersonByID is ...
-func DbGetPersonByID(id string) (Person, error) {
+func DbGetPersonByID(id string) (models.Person, error) {
 	stmt, err := DB.Prepare("SELECT id, first_name, last_name, email from people WHERE id = ?")
 
 	if err != nil {
-		return Person{}, err
+		return models.Person{}, err
 	}
 
-	person := Person{}
+	person := models.Person{}
 	sqlErr := stmt.QueryRow(id).Scan(&person.ID, &person.FirstName, &person.LastName, &person.Email)
 	if sqlErr != nil {
 		if sqlErr == sql.ErrNoRows {
-			return Person{}, nil
+			return models.Person{}, nil
 		}
-		return Person{}, sqlErr
+		return models.Person{}, sqlErr
 	}
 	return person, nil
 }

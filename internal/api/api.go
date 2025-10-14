@@ -149,7 +149,7 @@ func GetPersons(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path int true "Person ID"
-// @Success 200 {object} database.Person "Person details"
+// @Success 200 {object} models.Person "Person details"
 // @Failure 404 {object} models.APIResponse "Person not found"
 // @Router /api/v1/person/{id} [get]
 func GetPersonByID(c *gin.Context) {
@@ -177,7 +177,7 @@ func GetPersonByID(c *gin.Context) {
 // @Security BearerAuth
 // @Router /api/v1/person [post]
 func AddPerson(c *gin.Context) {
-	var json database.Person
+	var json models.Person
 
 	if err := c.ShouldBindJSON(&json); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -208,7 +208,7 @@ func UpdatePerson(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
 	}
 
-	var json database.Person
+	var json models.Person
 	if err := c.ShouldBindJSON(&json); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
