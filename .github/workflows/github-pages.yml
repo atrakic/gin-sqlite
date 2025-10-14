@@ -23,11 +23,15 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      - name: Set up Python
+        uses: actions/setup-python@v6.0.0
+
       - name: Set up Go ${{ matrix.go-version }}
         uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
           check-latest: true
+          cache: true
 
       - name: Install dependencies
         run: go get ./...
@@ -35,15 +39,22 @@ jobs:
       - name: Build
         run: go build -v ./...
 
-      - name: Build documentation
+      - name: Build swag documentation config
         run: |
           go install github.com/swaggo/swag/cmd/swag@latest
-          swag init -g cmd/server/main.go -o docs --pd --parseInternal
+          swag init -g cmd/server/main.go -o tmp --pd --parseInternal
+
+      - name: Build swagger documentation
+        run: |
+          mkdir -p docs
+          python -m pip install --upgrade pip
+          pip install pyyml
+          python .github/scripts/genswagger-docs.py tmp/swagger.yaml docs/index.html
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Upload entire repository
+          # Upload entire directory
           path: docs
 
   deploy:
